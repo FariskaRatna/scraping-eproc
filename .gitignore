@@ -1,1 +1,3 @@
 eproc/
+*.pyc
+__pycache__/
