@@ -3,6 +3,7 @@ from telegram import Bot
 from telegram.error import TimedOut
 from bnn import scrape_bnn
 from bri import scrape_bri
+from jmtm import scrape_jmtm
 
 BOT_TOKEN = "8511928874:AAHKAdT1pn6K00vH0PVPewi9kuzkkI0ZrXw"
 CHAT_ID = "-5280853082"
@@ -63,6 +64,35 @@ def build_bri_messages(df, max_char=3500):
 
     return messages
 
+def build_jmtm_messages(df, max_char=3500):
+    messages = []
+    header_global = "🏦 Hasil Scrapping Jasa Marga\n\n"
+
+    grouped = df.groupby("nama_pengadaan")
+
+    for satuan, group in grouped:
+        header_divisi = f"{satuan}:\n"
+        current = header_global + header_divisi
+        counter = 1
+
+        for _, row in df.iterrows():
+            line = (
+                f"{counter}. {row['nama_paket']} "
+                f"({row['hps']})\n\n"
+            )
+
+            if len(current) + len(line) > max_char:
+                messages.append(current)
+                current = header_global + header_divisi
+
+            current += line
+            counter += 1
+
+        if current.strip() != (header_global + header_divisi).strip():
+            messages.append(current)
+
+    return messages
+
 async def send_telegram_messages(messages):
     bot = Bot(BOT_TOKEN)
 
@@ -86,15 +116,20 @@ def main():
 
     df_sirup = scrape_bnn()
     df_bri = scrape_bri()
+    df_jmtm = scrape_jmtm()
 
     print(f"SIRUP: {len(df_sirup)} data")
     print(f"BRI  : {len(df_bri)} data")
+    print(f"JMTM  : {len(df_jmtm)} data")
 
     sirup_msgs = build_sirup_message(df_sirup)
     bri_msgs = build_bri_messages(df_bri)
+    jmtm_msgs = build_jmtm_messages(df_jmtm)
+
 
     asyncio.run(send_telegram_messages(sirup_msgs))
     asyncio.run(send_telegram_messages(bri_msgs))
+    asyncio.run(send_telegram_messages(jmtm_msgs))
 
 if __name__ == "__main__":
     main()
