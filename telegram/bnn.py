@@ -123,7 +123,7 @@ def scrape_bnn():
         ws["A4"] = "Waktu Scraping"
         ws["B4"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    print(f"\nSELESAI ✅")
+    print(f"\nSELESAI")
     print(f"Total data unik: {len(df)}")
     print(f"File: {OUTPUT_FILE}")
 

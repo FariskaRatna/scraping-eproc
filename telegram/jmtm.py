@@ -47,7 +47,7 @@ def scrape_jmtm():
                 return data;
             """, table)
 
-            print(f"📦 {kategori} → {len(rows)} rows")
+            print(f"{kategori} → {len(rows)} rows")
 
             for r in rows:
                 results.append({
@@ -59,7 +59,7 @@ def scrape_jmtm():
                 })
 
         except Exception as e:
-            print("⚠️ Skip card:", e)
+            print("Skip card:", e)
 
     driver.quit()
 
@@ -75,7 +75,7 @@ def scrape_jmtm():
     df = df.drop(columns=["akhir_pendaftaran_dt"])
 
     df.to_excel("jmtm-full-with-kategori.xlsx", index=False)
-    print("✅ Total row:", len(df))
+    print("Total row:", len(df))
     return df
 
 if __name__ == "__main__":

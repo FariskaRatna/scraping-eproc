@@ -4,6 +4,7 @@ from telegram.error import TimedOut
 from bnn import scrape_bnn
 from bri import scrape_bri
 from jmtm import scrape_jmtm
+from bsi import scrape_bsi
 
 BOT_TOKEN = "8511928874:AAHKAdT1pn6K00vH0PVPewi9kuzkkI0ZrXw"
 CHAT_ID = "-5280853082"
@@ -13,7 +14,7 @@ def format_rupiah(angka):
 
 def build_sirup_message(df, max_char=3500):
     messages = []
-    header_global = "🏦 Hasil Scraping SIRUP BNN\n\n"
+    header_global = "Hasil Scraping SIRUP BNN\n\n"
 
     grouped = df.groupby("satuan_kerja")
 
@@ -42,7 +43,7 @@ def build_sirup_message(df, max_char=3500):
 
 def build_bri_messages(df, max_char=3500):
     messages = []
-    header = "🏦 Hasil Scrapping BRI\n\n"
+    header = "Hasil Scrapping BRI\n\n"
 
     current = header
 
@@ -66,7 +67,7 @@ def build_bri_messages(df, max_char=3500):
 
 def build_jmtm_messages(df, max_char=3500):
     messages = []
-    header_global = "🏦 Hasil Scrapping Jasa Marga\n\n"
+    header_global = "Hasil Scrapping Jasa Marga\n\n"
 
     grouped = df.groupby("nama_pengadaan")
 
@@ -93,6 +94,30 @@ def build_jmtm_messages(df, max_char=3500):
 
     return messages
 
+def build_bsi_messages(df, max_char=3500):
+    messages = []
+    header = "Hasil Scrapping BSI\n\n"
+
+    current = header
+    counter = 1
+
+    for _, row in df.iterrows():
+        line = (
+            f"{counter}. {row['judul']}\n\n"
+        )
+
+        if len(current) + len(line) > max_char:
+            messages.append(current)
+            current = header
+
+        current += line
+        counter += 1
+
+    if current.strip() != header.strip():
+        messages.append(current)
+
+    return messages
+
 async def send_telegram_messages(messages):
     bot = Bot(BOT_TOKEN)
 
@@ -108,28 +133,34 @@ async def send_telegram_messages(messages):
                 await asyncio.sleep(1.5)
                 break
             except TimedOut:
-                print("⚠️ Timeout kirim Telegram, retry...")
+                print("Timeout kirim Telegram, retry...")
                 await asyncio.sleep(3)
 
 def main():
-    print("🚀 Mulai scraping data...")
+    print("Mulai scraping data...")
 
     df_sirup = scrape_bnn()
     df_bri = scrape_bri()
     df_jmtm = scrape_jmtm()
+    df_bsi = scrape_bsi(max_page=10)
 
     print(f"SIRUP: {len(df_sirup)} data")
     print(f"BRI  : {len(df_bri)} data")
     print(f"JMTM  : {len(df_jmtm)} data")
+    print(f"BSI  : {len(df_bsi)} data")
 
     sirup_msgs = build_sirup_message(df_sirup)
     bri_msgs = build_bri_messages(df_bri)
     jmtm_msgs = build_jmtm_messages(df_jmtm)
+    bsi_msg = build_bsi_messages(df_bsi)
 
 
     asyncio.run(send_telegram_messages(sirup_msgs))
     asyncio.run(send_telegram_messages(bri_msgs))
     asyncio.run(send_telegram_messages(jmtm_msgs))
+    asyncio.run(send_telegram_messages(bsi_msg))
 
 if __name__ == "__main__":
     main()
+
+    
